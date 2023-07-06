@@ -3,12 +3,14 @@ use env_local::{EnvErr, VariableType};
 use env_logger::TimestampPrecision;
 use log::{info, warn};
 use std::net::TcpListener;
+use dotenv::dotenv;
 
-pub mod connection;
 pub mod env_local;
 pub mod thread_pool;
+pub mod connection;
 
 fn main() {
+    dotenv().ok();
     env_logger::builder()
         .format_timestamp(Some(TimestampPrecision::Seconds))
         .init();
