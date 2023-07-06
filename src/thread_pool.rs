@@ -5,6 +5,7 @@ use std::{
 
 pub mod worker;
 
+#[allow(dead_code)]
 pub struct ThreadPool {
     limit: usize,
     threads: Vec<worker::Worker>,
