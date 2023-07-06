@@ -3,6 +3,8 @@ use std::{
     sync::{mpsc, Arc, Mutex},
 };
 
+use log::warn;
+
 pub mod worker;
 
 #[allow(dead_code)]
@@ -50,7 +52,7 @@ impl Drop for ThreadPool {
         drop(self.sender.take());
 
         for worker in &mut self.threads {
-            println!("Shutting down worker {}", worker.id);
+            warn!("shutting down worker {}", worker.id);
 
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();

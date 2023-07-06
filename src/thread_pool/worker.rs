@@ -3,6 +3,8 @@ use std::{
     thread,
 };
 
+use log::{info, warn};
+
 pub struct Worker {
     pub id: usize,
     pub thread: Option<thread::JoinHandle<()>>,
@@ -10,7 +12,7 @@ pub struct Worker {
 
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<super::Job>>>) -> Worker {
-        println!("Created worker {id}");
+        info!("spawned worker -> id: {id}");
         let thread = thread::spawn(move || loop {
             let message = receiver
                 .lock()
@@ -18,11 +20,11 @@ impl Worker {
                 .recv();
             match message {
                 Ok(job) => {
-                    println!("Worker {id} got a job; executing.");
+                    info!("worker `{id}` got a job; executing.");
                     job();
                 }
                 Err(_) => {
-                    println!("Worker {id} disconnected; shutting down.");
+                    warn!("worker `{id}` disconnected; shutting down.");
                     break;
                 }
             }

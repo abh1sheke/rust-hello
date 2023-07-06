@@ -1,5 +1,7 @@
 use connection::handle;
 use env_local::{EnvErr, VariableType};
+use env_logger::TimestampPrecision;
+use log::{info, warn};
 use std::net::TcpListener;
 
 pub mod connection;
@@ -7,6 +9,9 @@ pub mod env_local;
 pub mod thread_pool;
 
 fn main() {
+    env_logger::builder()
+        .format_timestamp(Some(TimestampPrecision::Seconds))
+        .init();
     let vars = env_local::Env::init()
         .unwrap_or_else(|err| match err {
             EnvErr::MissingVar(vars) => {
@@ -14,6 +19,16 @@ fn main() {
             }
         })
         .vars;
+
+    let port = {
+        if let VariableType::Int(num) = vars.get("PORT").unwrap() {
+            num
+        } else {
+            &0
+        }
+    };
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", *port)).unwrap();
+    info!("server listening on port: {}", *port);
 
     let pool_size = {
         if let VariableType::USize(num) = vars.get("POOL_SIZE").unwrap() {
@@ -26,20 +41,11 @@ fn main() {
         panic!("Error occured while creating thread pool: {}", err);
     });
 
-    let port = {
-        if let VariableType::Int(num) = vars.get("POOL_SIZE").unwrap() {
-            num
-        } else {
-            &0
-        }
-    };
-    let listener = TcpListener::bind(format!("127.0.0.1:{}", *port)).unwrap();
-
     for stream in listener.incoming() {
         let stream = stream.unwrap();
         pool.execute(|| {
             handle::handle_connection(stream);
         });
     }
-    println!("Shutting down.");
+    warn!("shutting down.");
 }

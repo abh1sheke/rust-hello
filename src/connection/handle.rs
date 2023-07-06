@@ -4,10 +4,12 @@ use std::{
     net::TcpStream
 };
 
+use log::info;
+
 pub fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
-    println!("{:#?}", request_line);
+    info!("{:#?}", request_line);
     let (status_line, filename) = match &request_line[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "web/index.html"),
         _ => ("HTTP/1.1 404 NOT FOUND", "web/404.html"),
