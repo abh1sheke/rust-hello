@@ -1,3 +1,4 @@
+use env_local::{EnvErr, VariableType};
 use std::{
     fs,
     io::{BufRead, BufReader, Write},
@@ -6,15 +7,40 @@ use std::{
     time::Duration,
 };
 
+pub mod env_local;
 pub mod thread_pool;
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-    let pool = thread_pool::ThreadPool::new(4).unwrap_or_else(|err| {
-        panic!("{}", err);
+    let vars = env_local::Env::init()
+        .unwrap_or_else(|err| match err {
+            EnvErr::MissingVar(vars) => {
+                panic!("\nMissing the following envars: \n{:?}\n", vars);
+            }
+        })
+        .vars;
+
+    let pool_size = {
+        if let VariableType::USize(num) = vars.get("POOL_SIZE").unwrap() {
+            num
+        } else {
+            &0
+        }
+    };
+
+    let pool = thread_pool::ThreadPool::new(*pool_size).unwrap_or_else(|err| {
+        panic!("Error occured while creating thread pool: {}", err);
     });
 
-    for stream in listener.incoming().take(2) {
+    let port = {
+        if let VariableType::Int(num) = vars.get("POOL_SIZE").unwrap() {
+            num
+        } else {
+            &0
+        }
+    };
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", *port)).unwrap();
+
+    for stream in listener.incoming() {
         let stream = stream.unwrap();
         pool.execute(|| {
             handle_connection(stream);
