@@ -6,6 +6,8 @@ use std::{
     time::Duration,
 };
 
+pub mod thread_pool;
+
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
     let pool = rs_serve::ThreadPool::new(4).unwrap_or_else(|err| {
