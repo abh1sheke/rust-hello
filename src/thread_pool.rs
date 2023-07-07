@@ -1,9 +1,10 @@
 use std::{
     fmt,
+    process,
     sync::{mpsc, Arc, Mutex},
 };
 
-use log::warn;
+use log::{error, warn};
 
 pub mod worker;
 
@@ -55,7 +56,11 @@ impl Drop for ThreadPool {
             warn!("shutting down worker {}", worker.id);
 
             if let Some(thread) = worker.thread.take() {
-                thread.join().unwrap();
+                thread.join().unwrap_or_else(|err| {
+                    error!("could not join thread; {:#?}", err);
+                    warn!("shutting down server.");
+                    process::exit(1);
+                });
             }
         }
     }
