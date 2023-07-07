@@ -1,8 +1,8 @@
 use connection::handle;
 use env_local::{EnvErr, VariableType};
 use env_logger::TimestampPrecision;
-use log::{info, warn};
-use std::net::TcpListener;
+use log::{info, warn, error};
+use std::{net::TcpListener, process};
 use dotenv::dotenv;
 
 pub mod env_local;
@@ -44,9 +44,13 @@ fn main() {
     });
 
     for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        pool.execute(|| {
-            handle::handle_connection(stream);
+        let stream = stream.unwrap_or_else(|err| {
+            error!("error reading incoming stream; {}", err);
+            process::exit(1);
+        });
+        pool.execute(move || {
+            let mut stream = stream;
+            handle::handle_connection(&mut stream);
         });
     }
     warn!("shutting down.");
