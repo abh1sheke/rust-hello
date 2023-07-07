@@ -7,8 +7,8 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN cargo build --release
+RUN cargo install --path .
 
 EXPOSE ${PORT}
 
-CMD [ "RUST_LOG=\"info,warn,error\"", "./target/release/app" ]
+CMD [ "RUST_LOG=\"info,warn,error\"", "rs_serve" ]
