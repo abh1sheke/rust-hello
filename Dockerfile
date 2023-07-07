@@ -1,4 +1,4 @@
-FROM rust:1.49
+FROM rust:1.70.0-alpine
 
 ARG PORT
 ARG POOL_SIZE
