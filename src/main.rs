@@ -48,6 +48,7 @@ fn main() {
             error!("error reading incoming stream; {}", err);
             process::exit(1);
         });
+        info!("{:?}", stream);
         pool.execute(move || {
             let mut stream = stream;
             handle::handle_connection(&mut stream);
