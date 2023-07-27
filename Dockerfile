@@ -1,14 +1,20 @@
-FROM rust:1.70.0-alpine
+FROM rust:1.70.0-alpine AS builder
 
-ARG PORT
-ARG POOL_SIZE
-
-WORKDIR /usr/src/app
-
+RUN mkdir -p /app
+WORKDIR /app
 COPY . .
 
-RUN cargo install --path .
+RUN cargo build --release
+
+FROM alpine:latest
+
+ARG PORT
+ARG POOl_SIZE
+ENV RUST_BACKTRACE=1
+ENV RUST_LOG="info,warn,error,debug"
+
+COPY --from=builder /app/target/release/rs-serve ./
 
 EXPOSE ${PORT}
 
-CMD [ "RUST_LOG=\"info,warn,error\"", "rs_serve" ]
+CMD ["./rs-serve"]
